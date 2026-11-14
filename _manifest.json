@@ -1,0 +1,54 @@
+{
+  "manifest_version": 2,
+  "id": "lorne.photography",
+  "version": "0.4.1",
+  "name": "摄影漫游",
+  "description": "从喜爱的摄影师与影集出发，真实看图、积累审美与摄影日记，在固定群选择性分享，并按讨论与容量管理收藏。",
+  "author": {
+    "name": "lorne",
+    "url": "https://github.com/l-lorne-n"
+  },
+  "license": "MIT",
+  "urls": {
+    "repository": "https://github.com/l-lorne-n/maibot_photography_plugin",
+    "documentation": "https://github.com/l-lorne-n/maibot_photography_plugin/blob/main/README.md"
+  },
+  "host_application": {
+    "min_version": "1.4.3",
+    "max_version": "1.4.99"
+  },
+  "sdk": {
+    "min_version": "2.22.1",
+    "max_version": "2.22.99"
+  },
+  "dependencies": [
+    {
+      "type": "plugin",
+      "id": "com.0-hz.fetch-url",
+      "version_spec": ">=0.4.4"
+    },
+    {
+      "type": "python_package",
+      "name": "pillow",
+      "version_spec": ">=10.0"
+    }
+  ],
+  "capabilities": [
+    "api.call",
+    "web.search",
+    "llm.generate",
+    "chat.get_all_streams",
+    "send.image",
+    "send.text",
+    "maisaka.proactive.trigger",
+    "config.get",
+    "message.get_recent",
+    "person.get_id",
+    "person.get_value",
+    "maisaka.reply.generate",
+    "llm.embed"
+  ],
+  "i18n": {
+    "default_locale": "zh-CN"
+  }
+}

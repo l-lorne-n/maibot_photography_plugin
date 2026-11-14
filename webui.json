@@ -1,0 +1,172 @@
+{
+  "schema_version": 2,
+  "required_capabilities": [
+    "custom_pages"
+  ],
+  "pages": [
+    {
+      "id": "studio",
+      "title": "摄影漫游",
+      "description": "导入审美基础，观察她的摄影探索、收藏、日记与偏好变化。",
+      "icon": "database",
+      "mode": "custom",
+      "entry": "webui/index.html",
+      "queries": {
+        "snapshot": {
+          "api": "webui_snapshot",
+          "version": "1"
+        },
+        "records": {
+          "api": "webui_records",
+          "version": "1",
+          "parameters": {
+            "kind": {
+              "type": "string",
+              "required": true,
+              "choices": [
+                "diary",
+                "image",
+                "feedback",
+                "job",
+                "fact_check",
+                "preview"
+              ]
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            }
+          }
+        },
+        "thumbnail": {
+          "api": "webui_thumbnail",
+          "version": "1",
+          "parameters": {
+            "image_id": {
+              "type": "string",
+              "required": true,
+              "max_length": 128
+            }
+          }
+        }
+      },
+      "actions": {
+        "import_seeds": {
+          "api": "webui_import_seeds",
+          "version": "1",
+          "parameters": {
+            "content": {
+              "type": "string",
+              "required": true,
+              "max_length": 49152
+            },
+            "filename": {
+              "type": "string",
+              "required": true,
+              "max_length": 256
+            }
+          }
+        },
+        "import_sites": {
+          "api": "webui_import_sites",
+          "version": "1",
+          "parameters": {
+            "content": {
+              "type": "string",
+              "required": true,
+              "max_length": 49152
+            }
+          }
+        },
+        "explore": {
+          "api": "webui_explore",
+          "version": "1",
+          "parameters": {
+            "intent": {
+              "type": "string",
+              "max_length": 2000
+            }
+          }
+        },
+        "cancel": {
+          "api": "webui_cancel",
+          "version": "1",
+          "parameters": {
+            "job_id": {
+              "type": "string",
+              "required": true,
+              "max_length": 128
+            }
+          }
+        },
+        "retry": {
+          "api": "webui_retry",
+          "version": "1",
+          "parameters": {
+            "job_id": {
+              "type": "string",
+              "required": true,
+              "max_length": 128
+            }
+          }
+        },
+        "pin": {
+          "api": "webui_pin",
+          "version": "1",
+          "parameters": {
+            "image_id": {
+              "type": "string",
+              "required": true,
+              "max_length": 128
+            },
+            "pinned": {
+              "type": "boolean",
+              "required": true
+            }
+          }
+        },
+        "settings": {
+          "api": "webui_settings",
+          "version": "1",
+          "parameters": {
+            "settings_json": {
+              "type": "string",
+              "required": true,
+              "max_length": 8192
+            }
+          }
+        },
+        "cleanup": {
+          "api": "webui_cleanup",
+          "version": "1",
+          "confirmation": "按当前遗忘规则清理低关注图片？来源、摄影日记和固定保留的图片会继续保留。"
+        },
+        "review": {
+          "api": "webui_review",
+          "version": "1"
+        },
+        "share_now": {
+          "api": "webui_share_now",
+          "version": "1"
+        },
+        "rewrite_diaries": {
+          "api": "webui_rewrite_diaries",
+          "version": "1"
+        },
+        "backfill_feedback": {
+          "api": "webui_backfill_feedback",
+          "version": "1"
+        },
+        "visual_index": {
+          "api": "webui_visual_index",
+          "version": "1"
+        }
+      }
+    }
+  ]
+}

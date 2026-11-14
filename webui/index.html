@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>摄影漫游</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; line-height: 1.65; }
+    main { max-width: 1440px; margin: auto; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(25px, 4vw, 36px); line-height: 1.3; letter-spacing: .06em; }
+    h2 { font-size: 18px; line-height: 1.5; }
+    h3 { font-size: 15px; line-height: 1.5; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: wait; opacity: .55; }
+    input, select, textarea { width: 100%; min-width: 0; }
+    textarea { resize: vertical; min-height: 108px; line-height: 1.65; }
+    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--maibot-primary); }
+    input[type="file"] { padding: 9px; border: 1px dashed var(--maibot-border); background: var(--maibot-background); border-radius: var(--maibot-radius); }
+    input[type="file"]::file-selector-button { margin-right: 12px; border: 1px solid var(--maibot-border); padding: 5px 10px; border-radius: var(--maibot-radius); background: var(--maibot-surface); color: var(--maibot-foreground); cursor: pointer; }
+    [hidden] { display: none !important; }
+    .masthead, .row, .section-head, .pagination, .metric-head { display: flex; align-items: center; gap: 12px; }
+    .masthead { justify-content: space-between; align-items: flex-start; margin-bottom: 22px; flex-wrap: wrap; }
+    .masthead p { margin-top: 8px; max-width: 650px; }
+    .eyebrow { color: var(--maibot-muted); font-size: 11px; letter-spacing: .2em; margin-bottom: 8px; }
+    .muted { color: var(--maibot-muted); }
+    .small { font-size: 12px; }
+    .hint { color: var(--maibot-muted); font-size: 13px; line-height: 1.6; }
+    .error { color: var(--maibot-danger); }
+    .stack { display: grid; gap: 14px; align-content: start; }
+    .row { flex-wrap: wrap; }
+    .spread { justify-content: space-between; }
+    .section-head { justify-content: space-between; flex-wrap: wrap; margin-bottom: 16px; }
+    .section-head > div { max-width: 760px; }
+    .section-head .hint { margin-top: 4px; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border: 1px solid var(--maibot-border); border-radius: 999px; white-space: nowrap; font-size: 12px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--maibot-primary); }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }
+    .metric { padding: 18px 20px; }
+    .metric-head { justify-content: space-between; font-size: 12px; color: var(--maibot-muted); }
+    .metric strong { display: block; margin-top: 6px; font-size: 30px; line-height: 1.3; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .metric small { display: block; margin-top: 5px; font-size: 11px; color: var(--maibot-muted); }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--maibot-border); padding-bottom: 14px; margin-bottom: 22px; }
+    .tabs .maibot-button { padding: 8px 16px; }
+    .columns { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; }
+    .panel { padding: 22px; }
+    .panel p + p { margin-top: 8px; }
+    .panel + .panel { margin-top: 20px; }
+    .field { display: grid; gap: 7px; font-size: 13px; }
+    .field > span:first-child { font-weight: 600; }
+    .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .field.full { grid-column: 1 / -1; }
+    .check { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; cursor: pointer; }
+    .check input { flex-shrink: 0; margin-top: 3px; }
+    .check small { display: block; margin-top: 2px; color: var(--maibot-muted); font-size: 12px; }
+    .notice { border-left: 3px solid var(--maibot-primary); padding: 10px 14px; background: var(--maibot-soft); font-size: 13px; }
+    #notice { margin-bottom: 18px; overflow-wrap: anywhere; }
+    #notice.error { border-color: var(--maibot-danger); }
+    .empty { padding: 34px 16px; text-align: center; color: var(--maibot-muted); font-size: 14px; border: 1px dashed var(--maibot-border); border-radius: var(--maibot-radius); }
+    .empty strong { display: block; color: var(--maibot-foreground); font-size: 15px; margin-bottom: 6px; }
+    .job { border-bottom: 1px solid var(--maibot-border); padding: 14px 0; overflow-wrap: anywhere; }
+    .job:first-child { padding-top: 0; }
+    .job:last-child { border-bottom: 0; padding-bottom: 0; }
+    .job p { margin-top: 6px; font-size: 13px; }
+    progress { width: 100%; height: 5px; accent-color: var(--maibot-primary); border: 0; margin-top: 12px; }
+    .compact-button { font-size: 12px; padding: 4px 10px !important; }
+    .seed-list { display: grid; gap: 0; max-height: 380px; overflow: auto; }
+    .seed { border-bottom: 1px solid var(--maibot-border); padding: 12px 0; }
+    .seed:last-child { border: 0; }
+    .seed .hint { margin-top: 3px; }
+    details > summary { cursor: pointer; font-size: 13px; }
+    details > .stack, details > .prose { margin-top: 12px; }
+    .prose { font-size: 14px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .diary { padding: 24px; margin-bottom: 16px; }
+    .diary h3 { font-size: 18px; }
+    .diary .prose { margin-top: 16px; }
+    .diary footer { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--maibot-border); font-size: 12px; color: var(--maibot-muted); }
+    .gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .gallery > .empty { grid-column: 1 / -1; }
+    .photo { overflow: hidden; padding: 0; }
+    .photo-visual { position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 4 / 3; border: 0; border-bottom: 1px solid var(--maibot-border); background: var(--maibot-soft); color: var(--maibot-muted); font-size: 12px; text-align: center; }
+    .photo-visual img { width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0; }
+    .photo-body { padding: 16px; }
+    .photo-body h3 { overflow-wrap: anywhere; }
+    .photo-body .reason { margin-top: 8px; font-size: 12px; color: var(--maibot-muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 58px; }
+    .photo-body .row { margin-top: 12px; gap: 8px; }
+    .photo .score { font-size: 11px; }
+    .pagination { justify-content: flex-end; margin-top: 20px; font-size: 13px; }
+    .directions { display: grid; gap: 12px; margin-top: 16px; }
+    .direction { border-left: 2px solid var(--maibot-primary); padding: 5px 0 5px 14px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid var(--maibot-border); vertical-align: top; }
+    th { color: var(--maibot-muted); font-weight: 500; white-space: nowrap; }
+    td:first-child { min-width: 180px; }
+    td .url { font-size: 11px; color: var(--maibot-muted); overflow-wrap: anywhere; }
+    dialog { width: min(860px, calc(100% - 28px)); max-height: 90vh; padding: 24px; background: var(--maibot-surface); color: var(--maibot-foreground); border: 1px solid var(--maibot-border); border-radius: var(--maibot-radius); }
+    dialog::backdrop { background: rgba(0,0,0,.5); }
+    .detail-image { display: block; width: 100%; max-height: 420px; object-fit: contain; background: var(--maibot-soft); margin-bottom: 20px; }
+    .detail-field { padding-top: 14px; }
+    .detail-field > strong { display: block; margin-bottom: 5px; font-size: 12px; color: var(--maibot-muted); }
+    .detail-field input { font-size: 12px; }
+    .footer-note { margin-top: 24px; color: var(--maibot-muted); font-size: 11px; }
+    @media (max-width: 1000px) { .columns { grid-template-columns: 1fr; } .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 620px) { body { padding: 14px; } .panel, .diary { padding: 17px; } .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .metric { padding: 14px; } .metric strong { font-size: 25px; } .gallery, .fields { grid-template-columns: 1fr; } .tabs { gap: 6px; } .tabs .maibot-button { padding: 6px 10px; font-size: 12px; } .masthead { gap: 16px; } }
+  </style>
+</head>
+<body class="maibot-page">
+<main>
+  <header class="masthead">
+    <div><div class="eyebrow">PHOTOGRAPHY JOURNAL</div><h1>摄影漫游</h1><p class="muted">从喜欢的作品出发，留下一点自己的判断。</p></div>
+    <div class="row"><span id="activity" class="badge">正在连接…</span><button id="refresh" class="maibot-button" type="button">刷新</button></div>
+  </header>
+  <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+  <section class="metrics" aria-label="摄影档案概览">
+    <article class="metric maibot-card"><div class="metric-head">审美起点<span>01</span></div><strong id="metric-seeds">—</strong><small>摄影师 · 保留指定作品</small></article>
+    <article class="metric maibot-card"><div class="metric-head">本地收藏<span>02</span></div><strong id="metric-images">—</strong><small id="metric-capacity">正在读取存储用量</small></article>
+    <article class="metric maibot-card"><div class="metric-head">摄影日记<span>03</span></div><strong id="metric-diaries">—</strong><small>观察、感受与下一次的问题</small></article>
+    <article class="metric maibot-card"><div class="metric-head">探索来源<span>04</span></div><strong id="metric-sources">—</strong><small>参考入口 · 可以继续发现新网站</small></article>
+  </section>
+  <nav class="tabs" aria-label="摄影工作台">
+    <button class="maibot-button" type="button" data-tab="overview" aria-pressed="true">漫游与起点</button>
+    <button class="maibot-button" type="button" data-tab="diary" aria-pressed="false">摄影日记</button>
+    <button class="maibot-button" type="button" data-tab="image" aria-pressed="false">图片收藏</button>
+    <button class="maibot-button" type="button" data-tab="profile" aria-pressed="false">审美与讨论</button>
+    <button class="maibot-button" type="button" data-tab="sources" aria-pressed="false">网站来源</button>
+    <button class="maibot-button" type="button" data-tab="settings" aria-pressed="false">日常与分享</button>
+  </nav>
+
+  <section data-panel="overview">
+    <div class="columns">
+      <div>
+        <section class="panel maibot-card">
+          <div class="section-head"><div><h2>让她去逛一逛</h2><p class="hint">带着已有兴趣继续看，也可以给这一次一个新问题。</p></div></div>
+          <div class="stack">
+            <label class="field"><span>这次想探索什么？</span><textarea id="explore-intent" class="maibot-input" maxlength="2000" placeholder="例如：再看看川内伦子的日常光线，也找找处理相似题材的其他摄影师。留空则由她根据当前审美选择。"></textarea></label>
+            <div class="row spread"><span class="hint">浏览在后台进行，可以随时回来查看。</span><button id="explore" class="maibot-button maibot-button-primary" type="button">开始漫游</button></div>
+          </div>
+        </section>
+        <section class="panel maibot-card">
+          <div class="section-head"><h2>最近的探索</h2><span id="daily-hint" class="hint"></span></div>
+          <div id="jobs"><div class="empty">正在读取任务…</div></div>
+          <button id="all-jobs" class="maibot-button compact-button" type="button" style="margin-top:16px">查看任务记录</button>
+        </section>
+      </div>
+      <div>
+        <section class="panel maibot-card">
+          <div class="section-head"><div><h2>导入审美基础</h2><p class="hint">选择整理好的 TXT。写了作品名，就会特别关注这些作品；只写摄影师，则从其整体创作开始了解。</p></div></div>
+          <div class="stack">
+            <label class="field"><span>摄影师与作品名单</span><input id="seed-file" type="file" accept=".txt,text/plain" aria-describedby="seed-file-hint"></label>
+            <p id="seed-file-hint" class="hint">UTF-8 文本，最多 48 KB。</p>
+            <details><summary>也可以直接粘贴或检查名单</summary><div class="stack"><textarea id="seed-content" class="maibot-input" rows="7" placeholder="川内伦子：Utatane，Hanabi，Illuminance&#10;上田义彦"></textarea></div></details>
+            <button id="import-seeds" class="maibot-button maibot-button-primary" type="button">导入并开始了解</button>
+            <p class="hint">从这些摄影师和作品出发，慢慢找到吸引她的画面。</p>
+          </div>
+        </section>
+        <section class="panel maibot-card">
+          <div class="section-head"><h2>已经提供的起点</h2><span id="seed-count" class="hint"></span></div>
+          <div id="seeds" class="seed-list"><div class="empty">正在读取参考名单…</div></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section data-panel="diary" hidden>
+    <div class="section-head"><div><h2>留给自己的摄影日记</h2><p class="hint">完整日记保留在这里，群里只分享少量作品和当时想说的话。</p></div><button id="rewrite-diaries" class="maibot-button" type="button">按现在的人设整理日记</button></div>
+    <p class="hint" style="margin-bottom:16px">保留日期和看过的照片，用她现在的口吻重新整理。</p>
+    <div id="diary-records"></div><div id="diary-pagination" class="pagination"></div>
+  </section>
+  <section data-panel="image" hidden>
+    <div class="section-head"><div><h2>她留下的图片</h2><p class="hint">看过才记录，喜欢才收藏。被遗忘的本地图仍保留来源和当时的观察。</p></div><button id="cleanup" class="maibot-button" type="button">按规则清理</button></div>
+    <div id="image-records" class="gallery"></div><div id="image-pagination" class="pagination"></div>
+  </section>
+  <section data-panel="profile" hidden>
+    <div class="columns">
+      <section class="panel maibot-card"><div class="section-head"><div><h2>正在形成的审美</h2><p class="hint">起点来自你，后续判断来自观看与讨论。</p></div></div><div id="profile"></div><button id="review-profile" class="maibot-button" type="button">整理已有感受</button><p class="hint">把这些天在意的画面和感受，整理成当前的审美方向。</p><div class="notice" id="character-status">正在读取日常人格与本群朋友资料…</div></section>
+      <section class="panel maibot-card" style="margin-top:0"><div class="section-head"><div><h2>讨论留下的影响</h2><p class="hint">聊作品、摄影师和摄影偏好，都能留下新的想法。</p></div><button id="backfill-feedback" class="maibot-button compact-button" type="button">整理最近的摄影讨论</button></div><div id="feedback-records"></div><div id="feedback-pagination" class="pagination"></div></section>
+    </div>
+    <details id="source-notes" class="panel maibot-card" style="margin-top:20px"><summary>来源笔记</summary><div class="stack"><p class="hint">以前记下的作者、作品与出处线索。</p><div id="fact_check-records"></div><div id="fact_check-pagination" class="pagination"></div></div></details>
+  </section>
+  <section data-panel="sources" hidden>
+    <div class="columns">
+      <section class="panel maibot-card"><div class="section-head"><div><h2>给她一些新的入口</h2><p class="hint">这些网站是参考，她也可以沿着作品与作者发现其他公开网站。</p></div></div>
+        <div class="stack"><label class="field"><span>网站地址，每行一个</span><textarea id="site-content" class="maibot-input" rows="6" placeholder="https://www.aint-bad.com/&#10;https://americansuburbx.com/"></textarea></label><label class="field"><span>或者导入网站 TXT</span><input id="site-file" type="file" accept=".txt,text/plain"></label><button id="import-sites" class="maibot-button maibot-button-primary" type="button">添加参考网站</button><p class="hint">最多 48 KB。支持带编号和说明的列表，网站地址会由插件解析。</p></div>
+      </section>
+      <section class="panel maibot-card" style="margin-top:0"><div class="section-head"><div><h2>从哪里发现作品</h2><p class="hint">喜欢的作品和朋友的讨论，会慢慢影响她接下来想逛的地方。</p></div></div><div id="sources"></div></section>
+    </div>
+  </section>
+  <section data-panel="settings" hidden>
+    <div class="columns">
+      <div>
+        <section class="panel maibot-card"><div class="section-head"><h2>日常探索</h2></div><div class="stack">
+          <label class="check"><input id="daily-enabled" type="checkbox"><span>每天自己去看看<small>当天达到启动时间后开始；重新启动时依据保存的任务进度处理。</small></span></label>
+          <div class="fields"><label class="field"><span>每天希望深入的摄影师</span><input id="daily-authors" class="maibot-input" type="number" min="1" max="10" value="3"><small class="hint">结合当前兴趣安排每天的探索。</small></label><label class="field"><span>每日开始时间（小时）</span><input id="daily-hour" class="maibot-input" type="number" min="0" max="23" value="0"><small class="hint">采用 Asia/Singapore（UTC+8）。</small></label></div>
+          <div class="fields">
+            <label class="field"><span>预览目标下限（张）</span><input id="preview-min" class="maibot-input" type="number" min="1" step="1" value="30" required></label>
+            <label class="field"><span>预览上限（张）</span><input id="preview-max" class="maibot-input" type="number" min="1" step="1" value="60" required></label>
+            <label class="field"><span>精看目标下限（张）</span><input id="detail-min" class="maibot-input" type="number" min="1" step="1" value="10" required></label>
+            <label class="field"><span>精看上限（张）</span><input id="detail-max" class="maibot-input" type="number" min="1" step="1" value="20" required></label>
+          </div>
+          <p class="hint">按不同作品计算预览与精看，同图的尺寸版本只算一次。收藏随兴趣决定，发现更清晰的版本会更新收藏。</p>
+          <details><summary>探索与模型设置</summary><div class="stack"><label class="field"><span>看图使用的模型任务</span><input id="vision-task" class="maibot-input" type="text" maxlength="80" value="vlm" required><small class="hint">vlm 是视觉任务名，与 MaiBot「任务分配」中的同名任务共用模型配置。</small></label><label class="field"><span>思考与整理使用的模型任务</span><input id="text-task" class="maibot-input" type="text" maxlength="80" value="utils" required><small class="hint">utils 是通用辅助任务名，用于浏览决策、日记整理和反馈分析；具体模型在 MaiBot「任务分配」中设置。</small></label><label class="field"><span>图片嵌入使用的模型任务</span><input id="image-embedding-task" class="maibot-input" type="text" maxlength="80" value="image_embedding" required><small class="hint">使用模型库中的 qwen3-vl-embedding，寻找适合对照的历史作品。</small></label><p id="visual-memory-status" class="hint"></p><button id="visual-index" class="maibot-button" type="button">整理收藏的视觉记忆</button><p id="jina-status" class="hint"></p></div></details>
+        </div></section>
+        <section class="panel maibot-card"><div class="section-head"><h2>有选择地遗忘</h2></div><div class="stack">
+          <div class="fields"><label class="field"><span>自动收藏上限（张）</span><input id="max-images" class="maibot-input" type="number" min="10" max="5000" value="700" required></label><label class="field"><span>图片空间上限（MiB）</span><input id="max-mb" class="maibot-input" type="number" min="16" max="10240" value="1024" required></label><label class="field"><span>低关注图片闲置天数</span><input id="idle-days" class="maibot-input" type="number" min="1" max="365" value="4" required></label></div>
+          <p class="hint">固定保留的图片不自动删除。容量不足时优先释放双方都较少在意的图片；网址、观察与日记继续保留。这里的空间统计仅包含本插件管理的图片。</p>
+        </div></section>
+      </div>
+      <div><section class="panel maibot-card"><div class="section-head"><h2>像平常聊天一样分享</h2></div><div class="stack">
+        <label class="check"><input id="share-enabled" type="checkbox"><span>允许向指定群分享<small>由她从实际看过的作品里挑选少量代表图片。</small></span></label>
+        <label class="field"><span>分享的固定群</span><select id="target-stream" class="maibot-select"><option value="">暂不选择</option></select></label>
+        <label class="field"><span>每次最多分享（张）</span><input id="share-count" class="maibot-input" type="number" min="1" step="1" value="2" required><small class="hint">每次挑选这些图片，再说“多发点”可以继续分享下一批。</small></label>
+        <p id="share-status" class="notice">选择固定群并保存，即可开启分享。</p>
+        <button id="share-now" class="maibot-button maibot-button-primary" type="button" disabled>一键分享</button>
+        <p class="hint">今天还没分享就从收藏里挑；分享过了就再逛一轮。</p>
+        <p id="share-now-result" class="hint" role="status" aria-live="polite" hidden></p>
+        <p class="hint">你可以在群里让她“再多发点”或“再去看看”。聊起摄影师、作品和看图感受，都会为后续探索留下线索。</p>
+      </div></section>
+      <section class="panel maibot-card"><div class="stack"><button id="save-settings" class="maibot-button maibot-button-primary" type="button">保存设置</button><p id="settings-hint" class="hint">保存后应用到之后的摄影探索与分享。</p></div></section></div>
+    </div>
+  </section>
+  <section data-panel="job" hidden><div class="section-head"><div><h2>任务记录</h2><p class="hint">保留已完成、中断和失败的探索记录。</p></div><button id="back-overview" class="maibot-button" type="button">返回漫游</button></div><div id="job-records" class="panel maibot-card"></div><div id="job-pagination" class="pagination"></div></section>
+  <p class="footer-note">把看过的画面、喜欢的理由和朋友的讨论，慢慢留在这里。</p>
+</main>
+<dialog id="image-detail" aria-labelledby="detail-title"><div class="section-head"><h2 id="detail-title">作品记录</h2><button id="close-detail" class="maibot-button" type="button">关闭</button></div><div id="detail-body"></div></dialog>
+<script>
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const create = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  const state = {snapshot: null, tab: 'overview', offsets: {diary: 0, image: 0, feedback: 0, job: 0, fact_check: 0}, revisions: {}, settingsDirty: false, seedFilename: '摄影师与作品.txt', polling: null, loading: false, shareBusy: false, shareJobId: '', rewriteBusy: false, rewriteJobId: '', rewriteNeedsRefresh: false};
+  const queued = [];
+  let inFlight = 0, nextStart = 0, requestTimer = null, stopped = false;
+  function request(kind, name, args = {}) {
+    return new Promise((resolve, reject) => { queued.push({kind, name, args, resolve, reject}); drain(); });
+  }
+  function drain() {
+    clearTimeout(requestTimer);
+    if (stopped || inFlight >= 2 || !queued.length) return;
+    const wait = nextStart - Date.now();
+    if (wait > 0) { requestTimer = setTimeout(drain, wait); return; }
+    const item = queued.shift();
+    inFlight++;
+    // All queries, thumbnails and actions share the host's two-request / two-per-second budget.
+    nextStart = Date.now() + 600;
+    Promise.resolve().then(() => maibot[item.kind](item.name, item.args)).then(result => {
+      if (result && (result.ok === false || result.success === false)) throw new Error(result.error || result.message || '操作未完成');
+      item.resolve(result);
+    }).catch(item.reject).finally(() => { inFlight--; drain(); });
+    drain();
+  }
+  function notify(message, error = false) {
+    $('notice').textContent = message;
+    $('notice').className = `notice${error ? ' error' : ''}`;
+    $('notice').hidden = !message;
+  }
+  function failure(error) { notify(error.message || String(error), true); }
+  function empty(target, title, description = '') {
+    const box = create('div', 'empty');
+    box.append(create('strong', '', title));
+    if (description) box.append(create('span', '', description));
+    target.replaceChildren(box);
+  }
+  function text(value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (Array.isArray(value)) return value.map(text).filter(Boolean).join('、');
+    return text(value.error || value.text || value.content || value.description || value.summary || value.reason || value.title || value.name || value.label || '');
+  }
+  function date(value) {
+    if (!value) return '';
+    const parsed = new Date(typeof value === 'number' && value < 1e12 ? value * 1000 : value);
+    return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleString('zh-CN', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
+  }
+  function score(value) { return typeof value === 'number' ? `${Math.round(value * 100)}%` : '尚无评价'; }
+  function bytes(value) { return typeof value === 'number' ? `${(value / 1048576).toFixed(1)} MiB` : '—'; }
+  function active(job) { return ['queued', 'running', 'pending', 'resuming'].includes(job.status); }
+  const statuses = {queued:'等待开始', pending:'等待开始', running:'正在探索', resuming:'继续探索', completed:'已完成', complete:'已完成', done:'已完成', partial:'部分完成', failed:'未完成', error:'出错', cancelled:'已取消', canceled:'已取消', interrupted:'已中断', paused:'已暂停'};
+  const jobTypes = {seed:'了解审美起点', seeds:'了解审美起点', seed_import:'了解审美起点', import_seeds:'了解审美起点', daily:'日常探索', explore:'摄影漫游', manual:'摄影漫游', feedback:'整理讨论', cleanup:'整理图片收藏', fact_check:'来源笔记', review:'整理已有感受', rewrite_diaries:'整理摄影日记', visual_index:'整理视觉记忆', share_now:'一键分享', share:'分享收藏图片', share_cycle:'漫游后分享'};
+  function jobNode(job) {
+    const card = create('article', 'job'), heading = create('div', 'row spread');
+    heading.append(create('strong', '', text(job.title || jobTypes[job.kind] || jobTypes[job.type] || job.intent || '摄影探索')));
+    const badge = create('span', `badge${['failed','error'].includes(job.status) ? ' error' : ''}`, statuses[job.status] || job.status || '状态未知');
+    heading.append(badge); card.append(heading);
+    const message = text(job.message || job.stage || job.progress_text);
+    if (message) card.append(create('p', '', message));
+    if (typeof job.progress === 'number') {
+      const progress = create('progress'); progress.max = 100; progress.value = job.progress;
+      progress.setAttribute('aria-label', '任务进度'); card.append(progress);
+    }
+    if (job.stop_reason) card.append(create('p', 'hint', `结束原因：${job.stop_reason}`));
+    const shareStates = {queued:'等待分享', sending:'正在发送图片', sent:'图片已发送', partial:'部分图片已发送', failed:'分享失败', rejected:'分享请求未通过检查'};
+    if (shareStates[job.share_status]) card.append(create('p', ['failed','rejected'].includes(job.share_status) ? 'error' : 'hint', `群分享：${shareStates[job.share_status]}${job.share_delivered_count ? `（${job.share_delivered_count} 张）` : ''}`));
+    if (job.share_error) card.append(create('p', 'error', job.share_error));
+    const commentaryStates = {pending:'等图片发完后聊聊', generating:'正在想说些什么', ready:'感想已写好', sending:'正在发送感想', sent:'已聊了感想', failed:'感想未发出', uncertain:'感想发送结果待确认'};
+    if (commentaryStates[job.share_commentary_status]) card.append(create('p', ['failed','uncertain'].includes(job.share_commentary_status) ? 'error' : 'hint', `分享感想：${commentaryStates[job.share_commentary_status]}`));
+    if (job.share_commentary_text) card.append(create('p', 'prose', job.share_commentary_text));
+    if (job.share_commentary_error) card.append(create('p', 'error', job.share_commentary_error));
+    if (job.error) card.append(create('p', 'error', text(job.error)));
+    if (Array.isArray(job.errors) && job.errors.length) {
+      const details = create('details'); details.append(create('summary', 'error', `${job.error_count ?? job.errors.length} 条抓取或浏览异常`));
+      details.append(create('div', 'prose small', job.errors.map(item => `${item.step ? `步骤 ${item.step}：` : ''}${text(item)}`).join('\n'))); card.append(details);
+    }
+    const foot = create('div', 'row spread');
+    foot.append(create('p', 'hint', date(job.updated_at || job.created_at)));
+    if (active(job)) {
+      const button = create('button', 'maibot-button compact-button', '停止这次探索'); button.type = 'button';
+      button.onclick = () => perform(button, 'cancel', {job_id: job.id}, '已请求停止这次探索。'); foot.append(button);
+    } else if (['failed', 'error', 'partial', 'interrupted', 'cancelled', 'canceled'].includes(job.status)) {
+      const retry = create('button', 'maibot-button compact-button', '继续这次探索'); retry.type = 'button';
+      retry.onclick = () => perform(retry, 'retry', {job_id: job.id}, '继续探索的请求已加入后台。'); foot.append(retry);
+    }
+    card.append(foot); return card;
+  }
+  function renderSeeds(seeds) {
+    $('seed-count').textContent = `${seeds.length} 位`;
+    if (!seeds.length) { empty($('seeds'), '还没有审美起点', '导入你喜欢的摄影师与作品，让第一次探索有迹可循。'); return; }
+    $('seeds').replaceChildren(...seeds.map(seed => {
+      const item = create('div', 'seed');
+      item.append(create('strong', '', text(seed.author || seed.name || seed.photographer)));
+      const viewed = Number(seed.viewed_count) || 0;
+      item.append(create('span', 'badge', viewed > 0 ? `看过 ${viewed} 张` : '还没逛到'));
+      item.append(create('p', 'hint', Array.isArray(seed.works) && seed.works.length ? `特别关注：${seed.works.join(' · ')}` : '关注整体创作风格'));
+      return item;
+    }));
+  }
+  function renderProfile(profile) {
+    const target = $('profile'); target.replaceChildren();
+    if (!profile || (!profile.summary && !profile.directions && !profile.content && !profile.bot_view)) {
+      empty(target, '审美还在开始的路上', '从喜欢的摄影师出发，慢慢留下自己的感受。'); return;
+    }
+    if (profile.updated_at) target.append(create('p', 'hint', `最近整理于 ${date(profile.updated_at)}`));
+    const intro = text(profile.summary || profile.content || profile.bot_view);
+    if (intro) target.append(create('p', 'prose', intro));
+    for (const [key, title] of [['directions', '目前在意的方向'], ['questions', '还惦记着什么'], ['user_basis', '来自你的起点']]) {
+      if (!profile[key] || (Array.isArray(profile[key]) && !profile[key].length)) continue;
+      const section = create('div', 'directions'); section.append(create('h3', '', title));
+      for (const item of Array.isArray(profile[key]) ? profile[key] : [profile[key]]) {
+        const node = create('div', 'direction'); node.append(create('p', 'prose', text(item)));
+        if (item && typeof item === 'object' && item.reason && text(item) !== item.reason) node.append(create('p', 'hint', item.reason));
+        section.append(node);
+      }
+      target.append(section);
+    }
+  }
+  function renderSources(sources) {
+    const target = $('sources');
+    if (!sources.length) { empty(target, '还没有参考网站', '添加几个喜欢的摄影网站作为探索入口。'); return; }
+    const wrap = create('div', 'table-wrap'), table = create('table', 'maibot-table'), head = create('tr'), tbody = create('tbody');
+    for (const label of ['来源', '她的兴趣', '朋友的反馈', '已看样本']) head.append(create('th', '', label));
+    const thead = create('thead'); thead.append(head); table.append(thead, tbody);
+    for (const source of sources) {
+      const row = create('tr'), identity = create('td');
+      identity.append(create('strong', '', text(source.name || source.domain || source.url)), create('div', 'url', source.url || ''));
+      if (source.weight !== undefined) identity.append(create('div', 'hint', `探索权重 ${Number(source.weight).toFixed(2)}`));
+      const samples = source.samples ?? source.observed_count ?? 0;
+      row.append(identity, create('td', '', samples ? score(source.bot_interest) : '尚未观察'), create('td', '', score(source.human_interest)), create('td', '', String(samples)));
+      tbody.append(row);
+    }
+    wrap.append(table); target.replaceChildren(wrap);
+  }
+  const settingsFields = {daily_enabled:'daily-enabled', share_enabled:'share-enabled', target_stream_id:'target-stream', daily_authors:'daily-authors', max_images:'max-images', max_mb:'max-mb', idle_days:'idle-days', vision_task:'vision-task', text_task:'text-task', image_embedding_task:'image-embedding-task', preview_min:'preview-min', preview_max:'preview-max', detail_min:'detail-min', detail_max:'detail-max', daily_hour:'daily-hour', share_count:'share-count'};
+  function renderSettings(snapshot) {
+    if (state.settingsDirty) return;
+    const settings = snapshot.settings;
+    const select = $('target-stream');
+    const option = create('option', '', '暂不选择'); option.value = '';
+    select.replaceChildren(option);
+    for (const group of snapshot.groups || []) { const item = create('option', '', group.name); item.value = group.id; select.append(item); }
+    if (settings.target_stream_id && !(snapshot.groups || []).some(group => group.id === settings.target_stream_id)) {
+      const missing = create('option', '', '已设置的群当前不可用'); missing.value = settings.target_stream_id; select.append(missing);
+    }
+    for (const [field, id] of Object.entries(settingsFields)) {
+      if (settings[field] === undefined) continue;
+      if ($(id).type === 'checkbox') $(id).checked = settings[field]; else $(id).value = settings[field];
+    }
+    const group = (snapshot.groups || []).find(item => item.id === settings.target_stream_id);
+    $('share-status').textContent = settings.share_enabled && settings.target_stream_id
+      ? `已启用分享，固定目标：${group ? group.name : '当前不可用的群'}。实际发送结果会保留在作品记录中。`
+      : '当前未启用群分享。选择固定群、打开分享开关并保存后生效。';
+    $('visual-memory-status').textContent = snapshot.visual_memory?.model ? `视觉记忆：${snapshot.visual_memory.model} · ${snapshot.visual_memory.vectors} 条 · ${snapshot.visual_memory.dimension} 维` : '视觉记忆将在整理收藏或精看作品时建立。';
+    $('jina-status').textContent = snapshot.jina_configured ? 'Jina 阅读服务：已配置' : 'Jina 阅读服务：未配置或尚未报告状态';
+    $('settings-hint').textContent = '保存后应用到之后的摄影探索与分享。';
+  }
+  function updateActionControls() {
+    const settings = state.snapshot?.settings, jobs = state.snapshot?.jobs || [];
+    const shareJob = jobs.find(job => job.id === state.shareJobId);
+    if (shareJob && !active(shareJob) && shareJob.share_status !== 'sending') state.shareJobId = '';
+    const shareRunning = state.shareBusy || Boolean(state.shareJobId && (!shareJob || active(shareJob) || shareJob.share_status === 'sending'));
+    $('share-now').disabled = shareRunning || !settings?.share_enabled || !settings?.target_stream_id;
+    $('share-now').textContent = shareRunning ? '正在安排分享…' : '一键分享';
+    const rewriteJob = jobs.find(job => job.id === state.rewriteJobId);
+    const rewriteRunning = state.rewriteBusy || Boolean(state.rewriteJobId && (!rewriteJob || active(rewriteJob)));
+    $('rewrite-diaries').disabled = rewriteRunning;
+    $('rewrite-diaries').textContent = rewriteRunning ? '正在整理日记…' : '按现在的人设整理日记';
+  }
+  function renderSnapshot(snapshot) {
+    state.snapshot = snapshot;
+    const stats = snapshot.stats, seeds = snapshot.seeds || [], sources = snapshot.sources || [], jobs = snapshot.jobs || [];
+    $('metric-seeds').textContent = seeds.length;
+    $('metric-images').textContent = stats.image_count;
+    $('metric-diaries').textContent = stats.counts?.diary ?? 0;
+    $('metric-sources').textContent = sources.length;
+    $('metric-capacity').textContent = `${bytes(stats.image_bytes)} · 上限 ${snapshot.settings.max_images} 张`;
+    const ongoing = jobs.filter(active);
+    $('activity').replaceChildren();
+    if (ongoing.length) $('activity').append(create('span', 'dot'));
+    $('activity').append(create('span', '', ongoing.length ? `${ongoing.length} 个任务进行中` : '此刻闲着，随时出发'));
+    $('daily-hint').textContent = snapshot.settings.daily_enabled ? '日常探索已开启' : '日常探索未开启';
+    const explorations = jobs.filter(job => job.kind !== 'fact_check');
+    if (!explorations.length) empty($('jobs'), '还没有探索记录', '可以先导入审美基础，也可以带着具体问题开始漫游。');
+    else $('jobs').replaceChildren(...explorations.slice(0, 5).map(jobNode));
+    renderSeeds(seeds); renderSources(sources); renderProfile(snapshot.profile); renderSettings(snapshot);
+    updateActionControls();
+    $('character-status').textContent = snapshot.persona_status?.summary || '尚未读取人格与朋友资料';
+    if (snapshot.persona_status?.error) $('character-status').textContent += ` · ${snapshot.persona_status.error}`;
+  }
+  async function refresh() {
+    if (state.loading || stopped) return;
+    state.loading = true; $('refresh').disabled = true;
+    try { renderSnapshot(await request('query', 'snapshot')); }
+    catch (error) { $('activity').textContent = '连接或读取失败'; failure(error); }
+    finally { state.loading = false; $('refresh').disabled = false; }
+  }
+  async function perform(button, name, args, message) {
+    if (button.disabled) return;
+    button.disabled = true;
+    try {
+      const result = await request('action', name, args);
+      notify(typeof message === 'function' ? message(result) : message);
+      await refresh();
+      await refreshVisibleRecords();
+      return result;
+    } catch (error) { failure(error); }
+    finally { button.disabled = false; updateActionControls(); }
+  }
+  function pager(kind, result) {
+    const target = $(`${kind}-pagination`), offset = state.offsets[kind], limit = kind === 'image' ? 12 : 10;
+    target.replaceChildren();
+    const previous = create('button', 'maibot-button', '上一页'), next = create('button', 'maibot-button', '下一页');
+    previous.type = next.type = 'button'; previous.disabled = offset === 0; next.disabled = offset + limit >= result.total;
+    previous.onclick = () => { state.offsets[kind] = Math.max(0, offset - limit); void loadRecords(kind); };
+    next.onclick = () => { state.offsets[kind] = offset + limit; void loadRecords(kind); };
+    target.append(create('span', 'muted', result.total ? `${offset + 1}–${Math.min(offset + result.items.length, result.total)} / ${result.total}` : '0 条记录'), previous, next);
+  }
+  async function loadRecords(kind) {
+    const revision = (state.revisions[kind] || 0) + 1; state.revisions[kind] = revision;
+    const target = $(`${kind}-records`);
+    empty(target, '正在读取…');
+    try {
+      const result = await request('query', 'records', {kind, offset: state.offsets[kind], limit: kind === 'image' ? 12 : 10});
+      if (state.revisions[kind] !== revision) return;
+      pager(kind, result);
+      if (!result.items.length) {
+        const messages = {diary:['还没有摄影日记', '完成探索后，观察与感受会留在这里。'], image:['还没有收藏图片', '先导入审美基础，再让她寻找值得仔细看的作品。'], feedback:['还没有摄影讨论记录', '指定群里聊起作品、摄影师或看图感受后，这里会留下记录。'], job:['还没有任务记录', '从漫游与起点开始第一次探索。'], fact_check:['还没有来源笔记', '观看时记下的作品出处也可以在图片记录中找到。']};
+        empty(target, ...messages[kind]); return;
+      }
+      target.replaceChildren(...result.items.map(item => kind === 'image' ? imageNode(item, revision) : kind === 'diary' ? diaryNode(item) : kind === 'job' ? jobNode(item) : kind === 'fact_check' ? factNode(item) : feedbackNode(item)));
+    } catch (error) { if (state.revisions[kind] === revision) empty(target, '读取失败', error.message || String(error)); }
+  }
+  function factNode(item) {
+    const article = create('article', 'diary maibot-card');
+    article.append(create('h3', '', item.question || '来源笔记'), create('p', 'hint', date(item.checked_at || item.created_at)));
+    if (item.conclusion) article.append(create('p', 'prose', item.conclusion));
+    for (const url of item.sources || []) { const link = create('a', 'url', url); if (/^https?:\/\//.test(url)) { link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; article.append(link); } }
+    return article;
+  }
+  function diaryNode(item) {
+    const article = create('article', 'diary maibot-card');
+    article.append(create('p', 'eyebrow', date(item.created_at || item.updated_at)), create('h3', '', item.title || '今天的摄影观察'), create('div', 'prose', text(item.content || item.summary || item.text)));
+    if (item.questions) article.append(create('div', 'prose', `还想继续想想：\n${text(item.questions)}`));
+    const count = Array.isArray(item.image_ids) ? item.image_ids.length : 0;
+    article.append(create('footer', '', count ? `收藏 ${count} 张${item.detail_count !== undefined ? ` · 预览 ${item.preview_count} 张，精看 ${item.detail_count} 张` : ""}` : '摄影探索记录'));
+    return article;
+  }
+  function feedbackNode(item) {
+    const article = create('article', 'job');
+    article.append(create('strong', '', item.user_name || item.author || '作品讨论'), create('p', 'hint', date(item.created_at)), create('p', 'prose', text(item.text || item.content || item.summary)));
+    if (item.insight) article.append(create('p', 'prose', `留下的想法：${item.insight}`));
+    const scope = {image:'这张作品', batch:'这一批作品', general:'摄影话题'}[item.scope];
+    if (scope) article.append(create('p', 'hint', scope));
+    if (item.topics?.length) article.append(create('p', 'hint', `聊到：${item.topics.join('、')}`));
+    if (item.status === 'pending') article.append(create('p', 'hint', '正在整理这段讨论'));
+    if (item.error) article.append(create('p', 'error', item.error));
+    return article;
+  }
+  function imageNode(item, revision) {
+    const card = create('article', 'photo maibot-card'), visual = create('button', 'photo-visual', item.local_status === 'evicted' ? '本地图已清理 · 观察仍在' : '正在读取图片…');
+    visual.type = 'button'; visual.setAttribute('aria-label', `查看 ${item.author || ''} ${item.work || item.title || '作品'} 的记录`);
+    visual.onclick = () => void imageDetail(item);
+    const body = create('div', 'photo-body');
+    body.append(create('p', 'eyebrow', item.author || '摄影作品'), create('h3', '', item.work || item.title || '摄影作品'), create('p', 'reason', text(item.reason || item.observations || '尚未记录收藏理由')));
+    const scores = create('div', 'row score'); scores.append(create('span', '', `她 ${score(item.bot_interest)}`), create('span', 'muted', `朋友 ${score(item.human_interest)}`)); body.append(scores);
+    const actions = create('div', 'row spread'), detail = create('button', 'maibot-button compact-button', '查看记录'), pin = create('button', 'maibot-button compact-button', item.pinned ? '已固定保留' : '固定保留');
+    detail.type = pin.type = 'button'; detail.onclick = () => void imageDetail(item); pin.setAttribute('aria-pressed', String(Boolean(item.pinned)));
+    pin.onclick = () => perform(pin, 'pin', {image_id: item.id, pinned: !item.pinned}, item.pinned ? '已取消固定保留。' : '已固定保留，不会被自动清理。');
+    actions.append(detail, pin); body.append(actions); card.append(visual, body);
+    if (item.local_status !== 'evicted') {
+      request('query', 'thumbnail', {image_id: item.id}).then(result => {
+        if (state.revisions.image !== revision || !visual.isConnected) return;
+        if (!/^data:image\/(?:jpeg|png|webp);base64,/.test(result.data_url)) throw new Error('图片响应格式不正确');
+        const image = create('img'); image.alt = [item.author, item.work || item.title || '摄影作品'].filter(Boolean).join(' · '); image.loading = 'lazy';
+        image.onerror = () => { visual.textContent = '图片无法解码'; };
+        image.src = result.data_url; visual.replaceChildren(image); item.preview = result.data_url;
+      }).catch(error => { if (visual.isConnected) visual.textContent = `图片读取失败：${error.message || error}`; });
+    }
+    return card;
+  }
+  async function imageDetail(item) {
+    $('detail-title').textContent = [item.author, item.work || item.title].filter(Boolean).join(' · ') || '作品记录';
+    const target = $('detail-body'); target.replaceChildren();
+    if (item.preview) { const image = create('img', 'detail-image'); image.src = item.preview; image.alt = $('detail-title').textContent; target.append(image); }
+    else target.append(create('p', 'notice', item.local_status === 'evicted' ? '本地图已按规则清理。以下是当时保存的观察和来源。' : '图片预览尚未加载，可以先阅读作品记录。'));
+    const values = [
+      ['看到了什么', text(item.observations || item.observation || item.description)],
+      ['为什么留下它', text(item.reason)], ['她的兴趣', score(item.bot_interest)], ['朋友的反馈', score(item.human_interest)],
+      ['作品页网址', item.source_url], ['图片来源网址', item.image_url], ['记录时间', date(item.created_at)]
+    ];
+    for (const [label, value] of values) {
+      if (!value) continue;
+      const field = create('div', 'detail-field'); field.append(create('strong', '', label));
+      if (label.endsWith('网址')) { const input = create('input', 'maibot-input'); input.value = value; input.readOnly = true; input.setAttribute('aria-label', label); input.onclick = () => input.select(); field.append(input); }
+      else field.append(create('p', 'prose', value));
+      target.append(field);
+    }
+    for (const comparison of item.visual_comparisons || []) {
+      const section = create('div', 'detail-field');
+      section.append(create('strong', '', '和以前的作品放在一起看'));
+      for (const [key, label] of [['composition','构图'], ['color','色彩'], ['visual_style','视觉风格'], ['preference_insight','想到的偏好']]) {
+        if (comparison[key]) section.append(create('p', 'prose', `${label}：${comparison[key]}`));
+      }
+      target.append(section);
+    }
+    $('image-detail').showModal();
+  }
+  function chooseTab(tab) {
+    state.tab = tab;
+    for (const panel of document.querySelectorAll('[data-panel]')) panel.hidden = panel.dataset.panel !== tab;
+    for (const button of document.querySelectorAll('[data-tab]')) button.setAttribute('aria-pressed', String(button.dataset.tab === tab));
+    if (['diary','image','job'].includes(tab)) void loadRecords(tab);
+    if (tab === 'profile') void loadRecords('feedback');
+  }
+  async function refreshVisibleRecords() {
+    if (['image','diary','job'].includes(state.tab)) await loadRecords(state.tab);
+    if (state.tab === 'profile') {
+      await loadRecords('feedback');
+      if ($('source-notes').open) await loadRecords('fact_check');
+    }
+  }
+  async function readTextFile(input, target, isSeed) {
+    const file = input.files[0]; if (!file) return;
+    if (file.size > 48000) throw new Error('文本文件超过 48 KB，请拆成较小的名单再导入。');
+    const content = await file.text();
+    if (content.includes('\uFFFD')) throw new Error('文件编码无法正确读取，请将 TXT 另存为 UTF-8 后再导入。');
+    target.value = content.replace(/^\uFEFF/, '');
+    if (isSeed) { state.seedFilename = file.name; $('seed-file-hint').textContent = `已读取 ${file.name} · ${content.split(/\r?\n/).filter(line => line.trim()).length} 行。点击下方按钮开始。`; }
+  }
+  function checkedText(id) {
+    const content = $(id).value.trim();
+    if (!content) throw new Error('请先选择 TXT 文件或粘贴内容。');
+    if (new TextEncoder().encode(content).length > 48000) throw new Error('文本超过 48 KB，请分批导入。');
+    return content;
+  }
+  $('seed-file').onchange = () => readTextFile($('seed-file'), $('seed-content'), true).catch(failure);
+  $('site-file').onchange = () => readTextFile($('site-file'), $('site-content'), false).catch(failure);
+  $('import-seeds').onclick = () => {
+    try { void perform($('import-seeds'), 'import_seeds', {content: checkedText('seed-content'), filename: state.seedFilename}, result => active(result)
+      ? `已接收 ${result.count} 位摄影师，后台将按任务进度继续了解。`
+      : `这份名单已有了解任务，当前${statuses[result.status] || result.status}。可在任务记录中查看结果或继续探索。`); } catch (error) { failure(error); }
+  };
+  $('import-sites').onclick = () => {
+    try { void perform($('import-sites'), 'import_sites', {content: checkedText('site-content')}, result => `已接收 ${result.count} 个参考网站，来源列表已更新。`); } catch (error) { failure(error); }
+  };
+  $('explore').onclick = () => void perform($('explore'), 'explore', {intent: $('explore-intent').value.trim()}, '漫游已加入后台，可在最近的探索里查看进度。');
+  $('backfill-feedback').onclick = () => void perform($('backfill-feedback'), 'backfill_feedback', {}, result => result.message);
+  $('visual-index').onclick = () => void perform($('visual-index'), 'visual_index', {}, '已开始整理收藏的视觉记忆。');
+  $('review-profile').onclick = () => void perform($('review-profile'), 'review', {}, '已开始整理已有感受。');
+  $('share-now').onclick = async () => {
+    if ($('share-now').disabled) return;
+    state.shareBusy = true;
+    try {
+      const result = await perform($('share-now'), 'share_now', {}, response => {
+        $('share-now-result').textContent = response.message;
+        $('share-now-result').hidden = false;
+        return response.message;
+      });
+      if (result) state.shareJobId = result.job_id;
+    } finally { state.shareBusy = false; updateActionControls(); }
+  };
+  $('rewrite-diaries').onclick = async () => {
+    if ($('rewrite-diaries').disabled) return;
+    state.rewriteBusy = true;
+    try {
+      const result = await perform($('rewrite-diaries'), 'rewrite_diaries', {}, '已开始按现在的人设整理日记。');
+      if (result) { state.rewriteJobId = result.job_id; state.rewriteNeedsRefresh = true; }
+    } finally { state.rewriteBusy = false; updateActionControls(); }
+  };
+  $('cleanup').onclick = () => void perform($('cleanup'), 'cleanup', {}, result => result.job_id ? '清理任务已加入后台。' : `已完成清理，释放 ${result.evicted_count ?? result.result?.evicted_count ?? 0} 张本地图；观察和来源继续保留。`);
+  $('close-detail').onclick = () => $('image-detail').close();
+  $('refresh').onclick = async () => { await refresh(); await refreshVisibleRecords(); };
+  $('source-notes').ontoggle = () => { if ($('source-notes').open) void loadRecords('fact_check'); };
+  $('all-jobs').onclick = () => chooseTab('job'); $('back-overview').onclick = () => chooseTab('overview');
+  for (const button of document.querySelectorAll('[data-tab]')) button.onclick = () => chooseTab(button.dataset.tab);
+  for (const id of Object.values(settingsFields)) {
+    if ($(id).type === 'number') $(id).required = true;
+    $(id).addEventListener('input', () => { state.settingsDirty = true; $('settings-hint').textContent = '有尚未保存的修改。'; });
+  }
+  $('save-settings').onclick = async () => {
+    const settings = {};
+    try {
+      for (const [field, id] of Object.entries(settingsFields)) {
+        const input = $(id);
+        if (!input.checkValidity()) { input.reportValidity(); return; }
+        settings[field] = input.type === 'checkbox' ? input.checked : input.type === 'number' ? Number(input.value) : input.value.trim();
+      }
+      if (settings.preview_min > settings.preview_max || settings.detail_min > settings.detail_max || settings.detail_max > settings.preview_max) throw new Error('请检查预览与精看数量范围：下限不能大于上限，精看上限不能超过预览上限。');
+      if (settings.share_enabled && !settings.target_stream_id) throw new Error('请先选择分享的固定群，或关闭分享开关。');
+      if (!settings.vision_task || !settings.text_task || !settings.image_embedding_task) throw new Error('请填写 MaiBot 中已配置的模型任务名。');
+      const result = await perform($('save-settings'), 'settings', {settings_json: JSON.stringify(settings)}, '摄影插件设置已保存。');
+      if (result) { state.settingsDirty = false; await refresh(); }
+    } catch (error) { failure(error); }
+  };
+  async function poll() {
+    if (stopped) return;
+    if (!document.hidden) await refresh();
+    const rewriteJob = state.snapshot?.jobs?.find(job => job.id === state.rewriteJobId);
+    if (state.rewriteNeedsRefresh && rewriteJob && !active(rewriteJob)) {
+      state.rewriteNeedsRefresh = false;
+      if (state.tab === 'diary') await loadRecords('diary');
+      state.rewriteJobId = '';
+      updateActionControls();
+    }
+    if (state.tab === 'profile') await loadRecords('feedback');
+    const ongoing = state.snapshot?.jobs?.some(active);
+    state.polling = setTimeout(poll, ongoing ? 8000 : 30000);
+  }
+  window.addEventListener('pagehide', () => {
+    stopped = true; clearTimeout(state.polling); clearTimeout(requestTimer);
+    for (const item of queued.splice(0)) item.reject(new Error('页面已关闭'));
+  });
+  maibot.ready.then(async () => { await refresh(); state.polling = setTimeout(poll, 8000); }).catch(failure);
+</script>
+</body>
+</html>

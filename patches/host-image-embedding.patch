@@ -1,0 +1,111 @@
+--- a/src/plugin_runtime/capabilities/core.py
++++ b/src/plugin_runtime/capabilities/core.py
+@@ -3,6 +3,7 @@
+ 
+ import asyncio
+ import base64
++import re
+ 
+ from src.common.logger import get_logger
+ from src.config.config import global_config
+@@ -132,6 +133,45 @@
+             raise ValueError(f"texts 第 {index} 项不能为空")
+         normalized_texts.append(normalized_text)
+     return normalized_texts
++
++
++def _normalize_embedding_image_arg(args: Dict[str, Any]) -> Tuple[bytes, str, str] | None:
++    """校验单图嵌入输入；图片字节与文本输入互斥，解码工作由线程池执行。"""
++    encoded = args.get("image_base64")
++    if encoded is None:
++        return None
++    if any(args.get(key) is not None for key in ("text", "texts", "input", "inputs")):
++        raise ValueError("image_base64 与 text/texts/input/inputs 只能提供一种输入")
++    if not isinstance(encoded, str) or not encoded.strip():
++        raise ValueError("image_base64 必须为非空 Base64 字符串")
++    encoded = encoded.strip()
++    mime_type = args.get("mime_type", "")
++    if not isinstance(mime_type, str):
++        raise ValueError("mime_type 必须为字符串")
++    mime_type = mime_type.strip().lower()
++    if encoded.startswith("data:"):
++        header, separator, encoded = encoded.partition(",")
++        if not separator or not header.endswith(";base64"):
++            raise ValueError("图片 Data URI 必须使用 Base64 编码")
++        declared_mime = header[5:-7].lower()
++        if mime_type and mime_type != declared_mime:
++            raise ValueError("mime_type 与图片 Data URI 声明不一致")
++        mime_type = declared_mime
++    if re.fullmatch(r"image/[a-z0-9.+-]+", mime_type) is None:
++        raise ValueError("图片嵌入需要有效的 image/* MIME 类型")
++    preprocess_version = args.get("preprocess_version")
++    if not isinstance(preprocess_version, str) or not 1 <= len(preprocess_version.strip()) <= 128:
++        raise ValueError("preprocess_version 必须为 1–128 字符的预处理版本")
++    max_bytes = 2 * 1024 * 1024
++    if len(encoded) > ((max_bytes + 2) // 3) * 4:
++        raise ValueError("图片嵌入输入超过 2 MiB")
++    try:
++        data = base64.b64decode(encoded, validate=True)
++    except (ValueError, base64.binascii.Error) as exc:
++        raise ValueError("image_base64 不是有效的 Base64 编码") from exc
++    if not data or len(data) > max_bytes:
++        raise ValueError("图片嵌入输入必须为 1 字节至 2 MiB")
++    return data, mime_type, preprocess_version.strip()
+ 
+ 
+ def _embedding_result_to_payload(result: Any) -> Dict[str, Any]:
+@@ -799,27 +839,49 @@
+             return {"success": False, "error": str(exc)}
+ 
+     async def _cap_llm_embed(self, plugin_id: str, capability: str, args: Dict[str, Any]) -> Any:
+-        """执行文本嵌入能力。"""
++        """执行单图或文本嵌入能力，保留宿主模型任务与向量空间身份。"""
+ 
+         del capability
+-        from src.services.embedding_service import EmbeddingServiceClient
++        from src.services.embedding_service import EmbeddingServiceClient, resolve_embedding_model_fingerprint
+         from src.services.llm_service import resolve_task_name
+ 
+         try:
++            image = await asyncio.to_thread(_normalize_embedding_image_arg, args)
+             text = _normalize_embedding_text_arg(args)
+             texts = _normalize_embedding_texts_arg(args)
+-            if text is None and not texts:
+-                return {"success": False, "error": "缺少必要参数 text 或 texts"}
++            if image is None and text is None and not texts:
++                return {"success": False, "error": "缺少必要参数 image_base64、text 或 texts"}
+             if text is not None and texts:
+                 return {"success": False, "error": "text 与 texts 只能提供一个"}
+ 
+             task_name = resolve_task_name(
+-                str(args.get("task_name", "") or args.get("model", "") or args.get("model_name", "") or "embedding")
++                str(args.get("task_name", "") or args.get("model", "") or args.get("model_name", "")
++                    or ("image_embedding" if image is not None else "embedding"))
+             )
+             embedding_client = EmbeddingServiceClient(
+                 task_name=task_name,
+                 request_type=f"plugin.{plugin_id}",
+             )
++
++            if image is not None:
++                data, mime_type, preprocess_version = image
++                result = await embedding_client.embed_image(
++                    data, mime_type=mime_type, preprocess_version=preprocess_version,
++                )
++                fingerprint = await asyncio.to_thread(
++                    resolve_embedding_model_fingerprint,
++                    model_name=result.model_name, model_identifier=result.model_identifier,
++                    api_provider=result.api_provider, dimension=len(result.embedding),
++                )
++                return {
++                    "success": True, **_embedding_result_to_payload(result),
++                    "model_identifier": result.model_identifier, "api_provider": result.api_provider,
++                    "mime_type": result.mime_type, "preprocess_version": result.preprocess_version,
++                    "request_protocol_hash": result.request_protocol_hash,
++                    "embedding_fingerprint": {key: fingerprint[key] for key in (
++                        "version", "hash", "model", "provider", "model_identifier", "dimension",
++                        "dimension_request_mode", "source")},
++                }
+ 
+             if text is not None:
+                 result = await embedding_client.embed_text(text)
